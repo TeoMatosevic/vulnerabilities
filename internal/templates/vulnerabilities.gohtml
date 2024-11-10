@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Home</title>
+        <base href="/" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <style>
+        html {
+            background-color: #475e45;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            color: #d7d9c1;
+            font-size: 1.5em;
+            padding: 1rem;
+        }
+        div {
+            color: #d7d9c1;
+            font-size: 1em;
+        }
+        p {
+            color: #d7d9c1;
+            font-size: 1em;
+        }
+        a {
+            color: #d7d9c1;
+            font-size: 1em;
+        }
+        .flex {
+            display: flex;
+        }
+        .justify-center {
+            justify-content: center;
+        }
+        .items-center {
+            align-items: center;
+        }
+        .p-1 {
+            padding: 1rem;
+        }
+        .m-1 {
+            margin: 1rem;
+        }
+    </style>
+    <body>
+        <h1> SQL Injection </h1>
+        <p class="p-1"> Primjer SQL Injection napada. <br>
+        Primjer dobivanja email adrese korisnika preko imena i prezimena. <br> <br>
+        Unesite ime i prezime korisnika te označite checkbox ako želite uključiti SQL Injection napad. <br>
+        Ovaj jednostavan primjer prikazuje jednostavan primjer SQL Injection napada. <br> <br>
+        Primjeri: <br>
+        Ime: test_01, Prezime: test_01, Vulnerable: false <br>
+        Rezultat je email adresa korisnika. <br> <br>
+        Ime: ' or ''=', Prezime: ' or 0=0 union select salt from users where ''='' or first_name = ', Vulnerable: true <br>
+        Rezultat su svi emailovi i saltovi korisnika. <br> 
+        Ovaj primjer je demonstracija kako se može doći do podataka korisnika preko SQL Injection napada.
+        U ovom smo primjeru uspjeli doći do saltova korisnika što je vrlo opasno jer se može koristiti za dekripciju lozinki.
+        </p>
+        <div class="flex items-center m-1">
+            <p> First Name: </p>
+            <input class="p-1 m-1" type="text" id="firstname" placeholder="First Name" />
+            <p> Last Name: </p>
+            <input class="p-1 m-1" type="text" id="lastname" placeholder="Last Name" />
+            <p> Vulnerable: </p>
+            <input type="checkbox" id="responsibility" />
+        </div>
+        <button class="p-1 m-1" id="search">Search</button>
+        <div class="m-1" id="result"></div>
+        <br>
+        <a class="m-1">
+            -------------------------------------------------------------------------------------------------------------------------------------------------
+        </a>
+        <br>
+        <h1> CSRF </h1>
+        <p class="m-1"> Primjer CSRF napada. <br>
+        Ovo je jednostavan primjer CSRF napada. <br>
+        Poanta primjera je da prikaže mogućnost napada kada se ne koristi CSRF token za zaštitu.
+        Za ovaj jednostavan primjer rezultat napada biti će prikazan kao tekst u nastavku ali u stvarnosti bi mogao biti puno opasniji. <br> <br>
+        Prije testiranja CSRF napada potrebno je prvo se ulogirati. To samo pomaže u demonstraciji napada i nema drugu svrhu.
+        Podatci za login mogu biti: <br>
+        Email: test01@gmail.com <br>
+        Password: test01 <br> <br>
+        Nakon što se ulogirate možete isprobati CSRF napad. <br>
+        Označite checkbox ako želite poslati CSRF token. Također označite checkbox ako želite da je napad moguć. <br>
+        Inače se ovakvi napadi izvršavaju na skrivenim elementima na stranici koji šalju zahtjeve na druge stranice, ali u ovom primjeru je to pojednostavljeno.
+        <p class="m-1"> Unesite email i password korisnika te kliknite na gumb. <br> </p>
+        <div class="flex items-center m-1">
+            <p> Email: </p>
+            <input class="p-1 m-1" type="text" id="email" placeholder="Email" />
+            <p> Password: </p>
+            <input class="p-1 m-1" type="text" id="password" placeholder="Password" />
+        </div>
+        <button class="p-1 m-1" id="login">Login</button>
+        <div class="m-1" id="result-login"></div>
+        <br>
+        <div class="flex items-center m-1">
+            <p> Vulnerable: </p>
+            <input type="checkbox" id="responsibility-csrf" />
+            <p> Send CSRF Token: </p>
+            <input type="checkbox" id="csrf-token" />
+        </div>
+        <button class="m-1 p-1" id="try-csrf">Try CSRF</button>
+        <div class="m-1" id="result-csrf"></div>
+
+        <script>
+            document.getElementById('search').addEventListener('click', function() {
+                var responsibility = document.getElementById('responsibility').checked;
+                var firstname = document.getElementById('firstname').value;
+                var lastname = document.getElementById('lastname').value;
+                let url = '';
+                if (!responsibility) {
+                    url = '/api/v1/users?firstname=' + firstname + '&lastname=' + lastname;
+                } else {
+                    url = '/api/v1/vulnerable-users?firstname=' + firstname + '&lastname=' + lastname;
+                }
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(function(response) {
+                    if (response.status !== 200) {
+                        var result = document.getElementById('result');
+                        result.innerHTML = "Error";
+                        return;
+                    }
+                    return response.json();
+                }).then(function(data) {
+                    if (!data) {
+                        return;
+                    }
+                    var result = document.getElementById('result');
+                    result.innerHTML = JSON.stringify(data);
+                });
+            });
+
+            document.getElementById('login').addEventListener('click', function() {
+                var email = document.getElementById('email').value;
+                var password = document.getElementById('password').value;
+                fetch('/api/v1/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                }).then(function(response) {
+                    if (response.status !== 200) {
+                        var result = document.getElementById('result-login');
+                        result.innerHTML = "Error";
+                        return;
+                    }
+                    return response.json();
+                }).then(function(data) {
+                    if (!data) {
+                        return;
+                    }
+                    var result = document.getElementById('result-login');
+                    result.innerHTML = "Login successful";
+                });
+            });
+
+            document.getElementById('try-csrf').addEventListener('click', function() {
+                var responsibility = document.getElementById('responsibility-csrf').checked;
+                var url = "/api/v1/user?vulnerable=" + responsibility;
+                let headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (document.getElementById('csrf-token').checked) {
+                    headers['X-CSRF-Token'] = '{{ . }}';
+                }
+
+                fetch(url, {
+                    method: 'GET',
+                    headers: headers
+                }).then(function(response) {
+                    if (response.status === 403) {
+                        var result = document.getElementById('result-csrf');
+                        result.innerHTML = "CSRF Token is invalid";
+                        return;
+                    } else if (response.status !== 200) {
+                        var result = document.getElementById('result-csrf');
+                        result.innerHTML = "Error (probably need to login first)";
+                        return;
+                    }
+                    return response.json();
+                }).then(function(data) {
+                    if (!data) {
+                        return;
+                    }
+                    var result = document.getElementById('result-csrf');
+                    if (responsibility === true) {
+                        result.innerHTML = "YOU ARE VULNERABLE TO CSRF!";
+                    } else {
+                        result.innerHTML = "CSRF Token is valid";
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>
+
